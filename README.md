@@ -12,10 +12,6 @@ Our vision is to produce a web app that will help facilitate the learning of var
 * MongoDB?  
 * PostgreSQL
 
-## 
-
-## 
-
 ## Semester Specific Goals:
 
 Our first step is to  analyze and interface with the Course Scaffold website from a previous RCOS project. It is defunct, and if we can get it up and running we could potentially utilize it as a baseline user interface tool and database to build our project from.
