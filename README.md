@@ -12,6 +12,26 @@ Our vision is to produce a web app that will help facilitate the learning of var
 * MongoDB?  
 * PostgreSQL
 
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
 ## Semester Specific Goals:
 
 Our first step is to  analyze and interface with the Course Scaffold website from a previous RCOS project. It is defunct, and if we can get it up and running we could potentially utilize it as a baseline user interface tool and database to build our project from.
@@ -51,3 +71,12 @@ Jacob Hudnut, [hudnuj@rpi.edu](mailto:hudnuj@rpi.edu), 4 credits
 Oliver Centner, [centno@rpi.edu](mailto:centno@rpi.edu), 4 credits  
 Ronan Hevenor, [hevenr@rpi.edu](mailto:hevenr@rpi.edu), 2 credits  
 Dan Liu, [liuy77@rpi.edu](mailto:liuy77@rpi.edu), 2 credits
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
