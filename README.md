@@ -2,7 +2,11 @@
 
 ## Vision:
 
-Our vision is to produce a web app that will help facilitate the learning of various topics. This will be done via modules and other systems that will allow educators to set their students up for success. The platform should be easy for professors to utilize, and will allow the professors to post content which will help students familiarize themselves with course materials, or brush up on course content and gauge their preparedness on prerequisites.
+Our vision is to create a web platform that maps the learning landscape and guides students through it with clarity. The app will connect concepts, skills, and classes into a living network, allowing students to see exactly which abilities a course requires and which new competencies it develops. Professors will be able to publish modules, posts, and quizzes that teach or evaluate specific skills, giving students immediate feedback on their preparedness and helping them track their growth over time.
+
+The system will combine curated knowledge with live data from university course catalogs. Automated scrapers will update official information like course descriptions and prerequisites, while professors and verified users can refine and expand the database with richer skill mappings and recommended study materials. This dual approach ensures the platform remains accurate, current, and deeply informative.
+
+For educators, the platform will provide simple tools to create content and link it directly to the skills and classes it supports. For students, it will function as an interactive map of their academic journey, showing which courses they are eligible for, highlighting gaps in their knowledge, and recommending quizzes or resources to close those gaps. The end goal is a transparent, dynamic guide to learning—one that helps every user understand where they stand, what they can tackle next, and how to prepare for the challenges ahead.
 
 ## Stack:
 
