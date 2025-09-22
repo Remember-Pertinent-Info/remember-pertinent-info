@@ -1,16 +1,10 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-/**
- * Get theme configuration based on mode
- * @param mode - 'light' or 'dark' theme mode
- * @returns Material UI theme options
- */
 export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => ({
   palette: {
     mode,
     ...(mode === 'dark'
       ? {
-          // Dark mode colors
           background: {
             default: '#000000', // Jet black background
             paper: '#0a0a0a',
@@ -18,15 +12,22 @@ export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => ({
           primary: {
             main: '#ffffff',
           },
+          text: {
+            primary: '#ffffff',
+            secondary: 'rgba(255, 255, 255, 0.7)',
+          },
         }
       : {
-          // Light mode colors
           background: {
             default: '#ffffff',
             paper: '#f5f5f5',
           },
           primary: {
             main: '#000000',
+          },
+          text: {
+            primary: '#000000',
+            secondary: 'rgba(0, 0, 0, 0.54)',
           },
         }),
   },

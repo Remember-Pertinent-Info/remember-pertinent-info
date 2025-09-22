@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { TextField, InputAdornment, Box } from '@mui/material';
 import { Search } from '@mui/icons-material';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useAppTheme } from '@/contexts/ThemeContext';
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
@@ -14,7 +14,7 @@ interface SearchBarProps {
  */
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { mode } = useTheme();
+  const { mode } = useAppTheme();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       autoComplete="off"
       sx={{
         width: '100%',
-        maxWidth: '584px', // Google search bar width
+        maxWidth: '584px',
         margin: '0 auto',
       }}
     >

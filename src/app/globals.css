@@ -1,22 +1,9 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Use Roboto to match imported font weights in layout.tsx */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
-/* Reset default margins and padding */
+/* Minimal reset */
 * {
   margin: 0;
   padding: 0;
@@ -26,7 +13,4 @@ body {
 /* Ensure full viewport height */
 html, body {
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }

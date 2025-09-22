@@ -4,12 +4,13 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import EmotionRegistry from '@/components/EmotionRegistry/EmotionRegistry';
 
 /**
  * App metadata
  */
 export const metadata: Metadata = {
-  title: "Remember Pertinent Info",
+  title: "CourseSource",
   description: "A smart memory assistant to help you remember what matters",
 };
 
@@ -44,10 +45,12 @@ export default function RootLayout({
         `}</style>
       </head>
       <body>
-        {/* MUI theme provider wraps the entire app */}
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        {/* Emotion SSR registry + MUI theme provider wraps the entire app */}
+        <EmotionRegistry>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </EmotionRegistry>
       </body>
     </html>
   );

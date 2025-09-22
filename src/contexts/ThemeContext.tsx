@@ -16,12 +16,14 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 /**
- * Custom hook to use theme context
+ * Custom hook to use theme context.
+ *
+ * We export `useAppTheme` to avoid colliding with MUI's `useTheme` hook.
  */
-export const useTheme = () => {
+export const useAppTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useAppTheme must be used within a ThemeProvider');
   }
   return context;
 };
@@ -34,7 +36,14 @@ interface ThemeProviderProps {
  * Theme provider component that wraps the app with Material UI theme
  */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [mode, setMode] = useState<'light' | 'dark'>('dark'); // Default to dark mode
+  // State to hold the current theme mode
+  const [mode, setMode] = useState<'light' | 'dark'>('dark'); // Default to dark for SSR
+
+  // On the client, check for the system's preferred color scheme
+  React.useEffect(() => {
+    const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setMode(prefersDarkMode ? 'dark' : 'light');
+  }, []);
 
   const colorMode = useMemo(
     () => ({
@@ -47,6 +56,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   );
 
   const theme = useMemo(() => createAppTheme(mode), [mode]);
+
+  // Force body background and text color to match theme
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.style.backgroundColor = theme.palette.background.default;
+      document.body.style.color = theme.palette.text.primary;
+    }
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={colorMode}>
