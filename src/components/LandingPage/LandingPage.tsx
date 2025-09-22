@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Box, useMediaQuery, useTheme, Typography } from '@mui/material';
+import { Box, useMediaQuery, useTheme, Typography, Toolbar } from '@mui/material';
 import Header from '@/components/Header/Header';
 import SearchResults, { SearchResult } from '@/components/SearchResults/SearchResults';
 
@@ -71,12 +71,16 @@ const LandingPage: React.FC = () => {
   <Header onSearch={handleSearch} searching={searching} />
       
       {/* Main content area */}
-      <Box
-        sx={{
-          minHeight: '100vh',
-          pt: isMobile ? '56px' : '64px', // Account for fixed header
-        }}
-      >
+      <Box sx={{ minHeight: '100vh' }}>
+        {/* Reliable offset for fixed AppBar: mirror the Header's toolbars */}
+        {isMobile ? (
+          <>
+            <Toolbar sx={{ minHeight: '48px' }} />
+            <Toolbar />
+          </>
+        ) : (
+          <Toolbar />
+        )}
         {/* Render search results (unstyled for now) */}
         <SearchResults results={results} />
         {message && (
