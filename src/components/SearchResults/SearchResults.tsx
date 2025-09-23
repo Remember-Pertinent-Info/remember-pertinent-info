@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Chip, List, ListItem, ListItemText, Typography, useTheme } from '@mui/material';
-import EntityModal from '../EntityModal/EntityModal';
+import { useModalStack } from '@/contexts/ModalStackContext';
 
 export interface SearchResult {
   id: string;
@@ -49,9 +49,7 @@ const SearchResults: React.FC<Props> = ({ results }) => {
   }, []);
 
   const [selected, setSelected] = useState<Record<SearchResult['type'], boolean>>(defaultSelected);
-  // Modal state
-  const [selectedEntity, setSelectedEntity] = useState<SearchResult | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openEntity } = useModalStack();
   
   // Filter results based on selected categories
   const filteredResults = useMemo(() => {
@@ -109,13 +107,7 @@ const SearchResults: React.FC<Props> = ({ results }) => {
 
   // Modal handlers
   const handleEntityClick = (entity: SearchResult) => {
-    setSelectedEntity(entity);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedEntity(null);
+    openEntity(entity);
   };
 
   const Dot: React.FC<{ color: string; onClick?: (e: React.MouseEvent) => void }> = ({ color, onClick }) => (
@@ -288,13 +280,7 @@ const SearchResults: React.FC<Props> = ({ results }) => {
         })}
       </List>
       
-      {/* Entity Detail Modal */}
-      <EntityModal
-        entity={selectedEntity}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        borderColor={selectedEntity ? (getCategoryInfo(selectedEntity.type)?.vibrant ?? '#ffffff') : '#ffffff'}
-      />
+      {/* Entity modals are handled globally by ModalStackProvider */}
     </Box>
   );
 };

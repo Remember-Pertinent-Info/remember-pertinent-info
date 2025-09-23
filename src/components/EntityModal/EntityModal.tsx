@@ -3,8 +3,9 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Typography, Chip, useTheme, useMediaQuery, IconButton } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Keyboard } from '@mui/icons-material';
 import { SearchResult } from '../SearchResults/SearchResults';
+import { useModalStack } from '@/contexts/ModalStackContext';
 import { 
   ConceptDetail, 
   SkillDetail, 
@@ -19,6 +20,9 @@ export interface EntityModalProps {
   isOpen: boolean;
   onClose: () => void;
   borderColor: string;
+  stackIndex?: number;
+  totalModals?: number;
+  isTopModal?: boolean;
 }
 
 /**
@@ -31,30 +35,27 @@ export interface EntityModalProps {
  * - Scrollable content area
  * - ESC key support
  */
-const EntityModal: React.FC<EntityModalProps> = ({ entity, isOpen, onClose, borderColor }) => {
+const EntityModal: React.FC<EntityModalProps> = ({ 
+  entity, 
+  isOpen, 
+  onClose, 
+  borderColor, 
+  stackIndex = 0, 
+  totalModals = 1, 
+  isTopModal = true 
+}) => {
   const theme = useTheme();
+  const { closeTop } = useModalStack();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // ESC key handler
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
+  // Calculate stacking effect values
+  const levelsBehindTop = totalModals - 1 - stackIndex;
+  const stackOffset = levelsBehindTop * 20; // Push previous modals up by 20px per level
+  const scale = isTopModal ? 1 : 1 + levelsBehindTop * 0.02; // Scale background modals up by 2% per level
+  const zIndex = 9999 + stackIndex; // Ensure proper layering (topmost has highest index)
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
+  // ESC handling and scroll lock are managed globally in ModalStackProvider
 
   // Focus trap - focus the modal when it opens
   useEffect(() => {
@@ -87,22 +88,24 @@ const EntityModal: React.FC<EntityModalProps> = ({ entity, isOpen, onClose, bord
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 9999,
+        zIndex: zIndex,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        transform: `translateY(-${stackOffset}px) scale(${scale})`,
+        transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {/* Backdrop - fully transparent (no tint, no blur), just a click catcher */}
       <Box
-        onClick={onClose}
+        onClick={isTopModal ? onClose : undefined}
         sx={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'transparent',
+          backgroundColor: isTopModal ? 'transparent' : 'rgba(0, 0, 0, 0.1)',
           backdropFilter: 'none',
           WebkitBackdropFilter: 'none',
           cursor: 'pointer',
@@ -170,18 +173,36 @@ const EntityModal: React.FC<EntityModalProps> = ({ entity, isOpen, onClose, bord
             />
           </Box>
 
-          <IconButton
-            onClick={onClose}
-            sx={{
-              ml: 2,
-              color: theme.palette.text.secondary,
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover,
-              },
-            }}
-          >
-            <Close />
-          </IconButton>
+          <Box sx={{ position: 'relative' }}>
+            {/* Escape hint - positioned absolutely above close button */}
+            <Box sx={{ 
+              position: 'absolute', 
+              top: '-12px', 
+              right: '50%', 
+              transform: 'translateX(50%)',
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 0.25, 
+              opacity: 0.6 
+            }}>
+              <Keyboard sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }} />
+              <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.6rem' }}>
+                ESC
+              </Typography>
+            </Box>
+            
+            <IconButton
+              onClick={onClose}
+              sx={{
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
         </Box>
 
         {/* Modal Content - Scrollable */}
