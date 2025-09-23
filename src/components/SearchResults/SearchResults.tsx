@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Chip, List, ListItem, ListItemIcon, ListItemText, Typography, useTheme } from '@mui/material';
+import { Box, Chip, List, ListItem, ListItemText, Typography, useTheme } from '@mui/material';
 
 export interface SearchResult {
   id: string;
@@ -14,14 +14,17 @@ interface Props {
 }
 
 const SearchResults: React.FC<Props> = ({ results }) => {
-  if (!results || results.length === 0) {
-    return null;
-  }
-
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
-  const categories = useMemo(
+  type Category = {
+    key: SearchResult['type'];
+    label: string;
+    vibrant: string;
+    pastel: string;
+  };
+
+  const categories: Category[] = useMemo(
     () => [
       { key: 'concepts', label: 'Concepts', vibrant: '#e53935', pastel: '#ffcdd2' }, // red
       { key: 'skills', label: 'Skills', vibrant: '#ff8c00ff', pastel: '#fde9b3ff' }, // orange
@@ -33,58 +36,75 @@ const SearchResults: React.FC<Props> = ({ results }) => {
     []
   );
 
-  // Select all categories by default
   const defaultSelected = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    categories.forEach((c) => { map[c.key] = true; });
+    const map: Record<SearchResult['type'], boolean> = {
+      concepts: true,
+      skills: true,
+      courses: true,
+      tracks: true,
+      departments: true,
+      majors: true,
+    };
     return map;
-  }, [categories]);
+  }, []);
 
-  const [selected, setSelected] = useState<Record<string, boolean>>(defaultSelected);
+  const [selected, setSelected] = useState<Record<SearchResult['type'], boolean>>(defaultSelected);
 
   // Filter results based on selected categories
   const filteredResults = useMemo(() => {
-    return results.filter(result => selected[result.type]);
+    return results.filter((result: SearchResult) => selected[result.type]);
   }, [results, selected]);
 
-  const toggle = (key: string, shiftKey = false) => {
+  const toggle = (key: SearchResult['type'], shiftKey = false) => {
     if (shiftKey) {
       // Shift-click: show only this category
-      const newSelected: Record<string, boolean> = {};
-      categories.forEach((c) => { newSelected[c.key] = c.key === key; });
+      const newSelected: Record<SearchResult['type'], boolean> = {
+        concepts: false,
+        skills: false,
+        courses: false,
+        tracks: false,
+        departments: false,
+        majors: false,
+      };
+      newSelected[key] = true;
       setSelected(newSelected);
     } else {
-      // Normal click: toggle this category
       setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
     }
   };
 
-  const showOnlyCategory = (key: string) => {
-    // Dot click: show only this category
-    const newSelected: Record<string, boolean> = {};
-    categories.forEach((c) => { newSelected[c.key] = c.key === key; });
+  const showOnlyCategory = (key: SearchResult['type']) => {
+    const newSelected: Record<SearchResult['type'], boolean> = {
+      concepts: false,
+      skills: false,
+      courses: false,
+      tracks: false,
+      departments: false,
+      majors: false,
+    };
+    newSelected[key] = true;
     setSelected(newSelected);
   };
 
   // Helper function to get category info for a result type
   const getCategoryInfo = (type: SearchResult['type']) => {
-    return categories.find(c => c.key === type);
+    return categories.find((c) => c.key === type);
   };
 
   // Helper function to get singular form of category type
   const getSingularType = (type: SearchResult['type']) => {
     const singularMap: Record<SearchResult['type'], string> = {
-      'concepts': 'Concept',
-      'skills': 'Skill', 
-      'courses': 'Course',
-      'tracks': 'Track',
-      'departments': 'Department',
-      'majors': 'Major'
+      concepts: 'Concept',
+      skills: 'Skill',
+      courses: 'Course',
+      tracks: 'Track',
+      departments: 'Department',
+      majors: 'Major',
     };
     return singularMap[type];
   };
 
-  const Dot = ({ color, onClick }: { color: string; onClick?: (e: React.MouseEvent) => void }) => (
+  const Dot: React.FC<{ color: string; onClick?: (e: React.MouseEvent) => void }> = ({ color, onClick }) => (
     <Box
       component="span"
       onClick={onClick}
@@ -98,6 +118,10 @@ const SearchResults: React.FC<Props> = ({ results }) => {
       }}
     />
   );
+
+  if (!results || results.length === 0) {
+    return null;
+  }
 
   return (
     <Box component="section" sx={{ maxWidth: 960, mx: 'auto', mt: 2, px: 2 }}>
@@ -175,14 +199,44 @@ const SearchResults: React.FC<Props> = ({ results }) => {
         {filteredResults.map((r) => {
           const categoryInfo = getCategoryInfo(r.type);
           const singularType = getSingularType(r.type);
-          
+          const glowColor = categoryInfo?.vibrant ?? (isDark ? '#ffffff' : '#000000');
+          const rowBg = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)';
           return (
-            <ListItem key={r.id} divider>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                {categoryInfo && <Dot color={isDark ? categoryInfo.vibrant : categoryInfo.pastel} />}
-                <ListItemText 
-                  primary={r.name} 
-                  secondary={r.description ?? ''} 
+            <ListItem
+              key={r.id}
+              divider
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundColor: rowBg,
+                pl: 2,
+                '&:hover': {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.035)',
+                },
+              }}
+            >
+              {/* Left-side glow wash */}
+              {categoryInfo && (
+                <Box
+                  aria-hidden
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 56,
+                    background: glowColor,
+                    opacity: isDark ? 0.25 : 0.18,
+                    filter: 'blur(18px)',
+                    pointerEvents: 'none',
+                  }}
+                />
+              )}
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', position: 'relative', zIndex: 1 }}>
+                <ListItemText
+                  primary={r.name}
+                  secondary={r.description ?? ''}
                   sx={{ flex: 1 }}
                 />
                 {categoryInfo && (

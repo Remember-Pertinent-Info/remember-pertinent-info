@@ -56,7 +56,6 @@ export async function GET(request: Request) {
 
       return NextResponse.json({ results: all, message: 'Showing all items' });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Default list fetch failed', e);
       return NextResponse.json({ results: [] });
     }
@@ -186,7 +185,6 @@ export async function GET(request: Request) {
       message: limitedResults.length === 0 ? `No results found for "${term}"` : undefined
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Search failed', err);
     return new NextResponse('Internal Server Error', { status: 500 });
   }

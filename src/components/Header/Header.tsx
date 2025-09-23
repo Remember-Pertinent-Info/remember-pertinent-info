@@ -35,7 +35,7 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
       // search ended while animation active -> finish faster
       setCompleting(true);
     }
-  }, [searching]);
+  }, [searching, active]);
 
   const debouncedSearch = (query: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -53,18 +53,6 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
     if (typingRef.current) clearTimeout(typingRef.current);
     typingRef.current = setTimeout(() => setTyping(false), 1000); // 1s
     debouncedSearch(e.target.value);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    if (onSearch) {
-      void onSearch(searchQuery.trim());
-    } else {
-      // Fallback: log when no handler supplied
-      // eslint-disable-next-line no-console
-      console.log('Searching for:', searchQuery);
-    }
   };
 
   return (

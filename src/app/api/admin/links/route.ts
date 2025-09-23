@@ -60,7 +60,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Failed to update link', err);
     return new NextResponse('Internal Server Error', { status: 500 });
   }

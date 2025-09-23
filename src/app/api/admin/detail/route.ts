@@ -36,7 +36,6 @@ export async function GET(request: Request) {
     }
     return new NextResponse('Unsupported type', { status: 400 });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Failed to load entity detail', err);
     return new NextResponse('Internal Server Error', { status: 500 });
   }

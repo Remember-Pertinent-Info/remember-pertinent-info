@@ -11,7 +11,6 @@ export async function GET() {
     ]);
     return NextResponse.json({ departments, majors, tracks, courses });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('Failed to load admin entities', err);
     return new NextResponse('Internal Server Error', { status: 500 });
   }

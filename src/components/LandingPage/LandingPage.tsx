@@ -53,7 +53,6 @@ const LandingPage: React.FC = () => {
       setResults(json.results ?? []);
       if (json.warning) {
         // surface server-side warnings in dev console for now
-        // eslint-disable-next-line no-console
         console.warn('Search API warning:', json.warning);
       }
       setMessage(json.message ?? null);

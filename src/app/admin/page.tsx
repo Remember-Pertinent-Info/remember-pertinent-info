@@ -5,6 +5,37 @@ import { Box, Container, Typography, Paper, List, ListItemText, Divider, Button,
 
 type Entity = { id: string; code: string; name: string };
 
+type DepartmentDetail = {
+  id: string;
+  code: string;
+  name: string;
+  majors: Entity[];
+} | null;
+
+type MajorDetail = {
+  id: string;
+  code: string;
+  name: string;
+  department: Entity | null;
+  courses: Entity[];
+  tracks: Entity[];
+} | null;
+
+type TrackDetail = {
+  id: string;
+  code: string;
+  name: string;
+  courses: Entity[];
+  majors: Entity[];
+} | null;
+
+type LinkPayload = {
+  action: 'add' | 'remove';
+  relation: 'department:major' | 'major:course' | 'major:track' | 'track:course';
+  fromId: string;
+  toId: string;
+};
+
 export default function AdminPage() {
   const [departments, setDepartments] = useState<Entity[]>([]);
   const [majors, setMajors] = useState<Entity[]>([]);
@@ -15,9 +46,9 @@ export default function AdminPage() {
   const [selectedMajor, setSelectedMajor] = useState<Entity | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<Entity | null>(null);
 
-  const [majorDetail, setMajorDetail] = useState<any>(null);
-  const [deptDetail, setDeptDetail] = useState<any>(null);
-  const [trackDetail, setTrackDetail] = useState<any>(null);
+  const [majorDetail, setMajorDetail] = useState<MajorDetail>(null);
+  const [deptDetail, setDeptDetail] = useState<DepartmentDetail>(null);
+  const [trackDetail, setTrackDetail] = useState<TrackDetail>(null);
 
   const loadEntities = async () => {
     const res = await fetch('/api/admin/entities', { cache: 'no-store' });
@@ -38,16 +69,16 @@ export default function AdminPage() {
 
   useEffect(() => { void loadEntities(); }, []);
 
-  useEffect(() => { if (selectedDept) void loadDetail('department', selectedDept.id); }, [selectedDept?.id]);
-  useEffect(() => { if (selectedMajor) void loadDetail('major', selectedMajor.id); }, [selectedMajor?.id]);
-  useEffect(() => { if (selectedTrack) void loadDetail('track', selectedTrack.id); }, [selectedTrack?.id]);
+  useEffect(() => { if (selectedDept) void loadDetail('department', selectedDept.id); }, [selectedDept]);
+  useEffect(() => { if (selectedMajor) void loadDetail('major', selectedMajor.id); }, [selectedMajor]);
+  useEffect(() => { if (selectedTrack) void loadDetail('track', selectedTrack.id); }, [selectedTrack]);
 
   const notIn = (all: Entity[], inList: Entity[] | undefined) => {
     const set = new Set((inList ?? []).map(e => e.id));
     return all.filter(e => !set.has(e.id));
   };
 
-  const postLink = async (payload: any) => {
+  const postLink = async (payload: LinkPayload) => {
     await fetch('/api/admin/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     // refresh details
     if (selectedDept) void loadDetail('department', selectedDept.id);

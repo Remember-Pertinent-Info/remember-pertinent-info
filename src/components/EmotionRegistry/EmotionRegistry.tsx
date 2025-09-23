@@ -27,13 +27,12 @@ export default function EmotionRegistry({
 		let inserted: string[] = [];
 
 		// Intercept insert to track which names were added between renders
-		cache.insert = (...args: any[]) => {
+		cache.insert = (...args: Parameters<typeof prevInsert>) => {
 			// args: selector, serialized, sheet, shouldCache
 			const serialized = args[1];
 			if (cache.inserted[serialized.name] === undefined) {
 				inserted.push(serialized.name);
 			}
-			// @ts-expect-error - emotion types for insert are not super strict here
 			return prevInsert(...args);
 		};
 
@@ -61,7 +60,6 @@ export default function EmotionRegistry({
 		return (
 			<style
 				data-emotion={`${cache.key} ${names.join(' ')}`}
-				// eslint-disable-next-line react/no-danger
 				dangerouslySetInnerHTML={{ __html: styles }}
 			/>
 		);
