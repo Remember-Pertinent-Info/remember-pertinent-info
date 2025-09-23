@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Chip, List, ListItem, ListItemText, Typography, useTheme } from '@mui/material';
+import EntityModal from '../EntityModal/EntityModal';
 
 export interface SearchResult {
   id: string;
@@ -35,7 +36,6 @@ const SearchResults: React.FC<Props> = ({ results }) => {
     ],
     []
   );
-
   const defaultSelected = useMemo(() => {
     const map: Record<SearchResult['type'], boolean> = {
       concepts: true,
@@ -49,7 +49,10 @@ const SearchResults: React.FC<Props> = ({ results }) => {
   }, []);
 
   const [selected, setSelected] = useState<Record<SearchResult['type'], boolean>>(defaultSelected);
-
+  // Modal state
+  const [selectedEntity, setSelectedEntity] = useState<SearchResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   // Filter results based on selected categories
   const filteredResults = useMemo(() => {
     return results.filter((result: SearchResult) => selected[result.type]);
@@ -102,6 +105,17 @@ const SearchResults: React.FC<Props> = ({ results }) => {
       majors: 'Major',
     };
     return singularMap[type];
+  };
+
+  // Modal handlers
+  const handleEntityClick = (entity: SearchResult) => {
+    setSelectedEntity(entity);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedEntity(null);
   };
 
   const Dot: React.FC<{ color: string; onClick?: (e: React.MouseEvent) => void }> = ({ color, onClick }) => (
@@ -205,36 +219,46 @@ const SearchResults: React.FC<Props> = ({ results }) => {
             <ListItem
               key={r.id}
               divider
+              onClick={() => handleEntityClick(r)}
               sx={{
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: rowBg,
                 pl: 2,
-                '&:hover': {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.035)',
-                },
+                cursor: 'pointer',
+                // Removed background-color transition and hover tint so hover only affects the glow element.
+                  '&:hover': {
+                      // Only animate the glow; do not change the row background/tint on hover.
+                      '& [data-glow]': {
+                        transform: 'translateZ(0) scaleX(1.6)',
+                        transformOrigin: 'left center',
+                      },
+                    },
               }}
             >
               {/* Left-side glow wash */}
               {categoryInfo && (
                 <Box
-                  aria-hidden
+                    aria-hidden
+                    data-glow
                   sx={{
                     position: 'absolute',
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    // Expand across the whole row so the glow can fade left->right
+                    // Expand across the whole row so the glow can fade left->right (base)
                     right: 0,
                     width: '150%',
                     // Use a left-to-right gradient from vibrant color to transparent
                     background: `linear-gradient(90deg, ${glowColor} 0%, rgba(0,0,0,0) 60%)`,
                     // Make the glow brighter and softer
-                    opacity: isDark ? 0.45 : 0.37,
-                    filter: 'blur(28px)',
-                    transform: 'translateZ(0)',
-                    pointerEvents: 'none',
-                    transition: 'opacity 180ms ease, transform 180ms ease',
+                      opacity: isDark ? 0.45 : 0.37,
+                      filter: 'blur(28px)',
+                      transform: 'translateZ(0) scaleX(1)',
+                      transformOrigin: 'left center',
+                      pointerEvents: 'none',
+                      willChange: 'transform',
+                      transition: 'transform 1ms ease-in-out', // increase to make this a slow stretch
                     // ensure the gradient blends nicely over background
                     mixBlendMode: isDark ? 'screen' : 'normal',
                   }}
@@ -263,6 +287,14 @@ const SearchResults: React.FC<Props> = ({ results }) => {
           );
         })}
       </List>
+      
+      {/* Entity Detail Modal */}
+      <EntityModal
+        entity={selectedEntity}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        borderColor={selectedEntity ? (getCategoryInfo(selectedEntity.type)?.vibrant ?? '#ffffff') : '#ffffff'}
+      />
     </Box>
   );
 };
