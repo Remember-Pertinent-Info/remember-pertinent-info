@@ -31,3 +31,51 @@ model Concept {
   // classes     ClassConcept[]  // link to classes later
   // skills      SkillConcept[]  // link to skills later
 }
+
+model Skill {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+}
+
+model Course {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  // Relations
+  majors      Major[]
+  tracks      Track[]
+}
+
+model Track {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  // Relations
+  courses     Course[]
+  majors      Major[]
+}
+
+model Department {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  // Relations
+  majors      Major[]
+}
+
+model Major {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  // Relations
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?
+  courses      Course[]
+  tracks       Track[]
+}

@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Chip, List, ListItem, ListItemText, Typography, useTheme } from '@mui/material';
+import { Box, Chip, List, ListItem, ListItemIcon, ListItemText, Typography, useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 export interface SearchResult {
   id: string;
   code: string;
   name: string;
   description?: string | null;
+  type: 'concepts' | 'skills' | 'courses' | 'tracks' | 'departments' | 'majors';
 }
 
 interface Props {
@@ -23,11 +25,11 @@ const SearchResults: React.FC<Props> = ({ results }) => {
   const categories = useMemo(
     () => [
       { key: 'concepts', label: 'Concepts', vibrant: '#e53935', pastel: '#ffcdd2' }, // red
-      { key: 'skills', label: 'Skills', vibrant: '#ff8c00ff', pastel: '#fde9b3ff' }, // orange
+      { key: 'skills', label: 'Skills', vibrant: '#ff8c00', pastel: '#fde9b3' }, // orange
       { key: 'courses', label: 'Courses', vibrant: '#43a047', pastel: '#c8e6c9' }, // green
       { key: 'tracks', label: 'Tracks', vibrant: '#1e88e5', pastel: '#bbdefb' }, // blue
       { key: 'departments', label: 'Departments', vibrant: 'rgba(118, 138, 255, 1)', pastel: '#c5cae9' }, // indigo
-      { key: 'majors', label: 'Majors', vibrant: '#b342d3ff', pastel: '#e1bee7' }, // violet/purple
+      { key: 'majors', label: 'Majors', vibrant: '#b342d3', pastel: '#e1bee7' }, // violet/purple
     ],
     []
   );
@@ -41,28 +43,96 @@ const SearchResults: React.FC<Props> = ({ results }) => {
 
   const [selected, setSelected] = useState<Record<string, boolean>>(defaultSelected);
 
-  const toggle = (key: string) => {
-    setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Filter results based on selected categories
+  const filteredResults = useMemo(() => {
+    return results.filter(result => selected[result.type]);
+  }, [results, selected]);
+
+  const toggle = (key: string, shiftKey = false) => {
+    if (shiftKey) {
+      // Shift-click: show only this category
+      const newSelected: Record<string, boolean> = {};
+      categories.forEach((c) => { newSelected[c.key] = c.key === key; });
+      setSelected(newSelected);
+    } else {
+      // Normal click: toggle this category
+      setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
   };
 
-  const Dot = ({ color }: { color: string }) => (
-    <Box
-      component="span"
-      sx={{
-        display: 'inline-block',
-        width: '0.6em',
-        height: '0.6em',
-        borderRadius: '50%',
-        bgcolor: color,
-      }}
-    />
-  );
+  const showOnlyCategory = (key: string) => {
+    // Dot click: show only this category
+    const newSelected: Record<string, boolean> = {};
+    categories.forEach((c) => { newSelected[c.key] = c.key === key; });
+    setSelected(newSelected);
+  };
+
+  // Helper function to get category info for a result type
+  const getCategoryInfo = (type: SearchResult['type']) => {
+    return categories.find(c => c.key === type);
+  };
+
+  // Helper function to get singular form of category type
+  const getSingularType = (type: SearchResult['type']) => {
+    const singularMap: Record<SearchResult['type'], string> = {
+      'concepts': 'Concept',
+      'skills': 'Skill', 
+      'courses': 'Course',
+      'tracks': 'Track',
+      'departments': 'Department',
+      'majors': 'Major'
+    };
+    return singularMap[type];
+  };
+
+  const Dot = ({ color, onClick, glowDirection = 'right' }: { 
+    color: string; 
+    onClick?: (e: React.MouseEvent) => void;
+    glowDirection?: 'left' | 'right' | 'none';
+  }) => {
+    const soft = alpha(color as any, 0.35);
+    const faint = alpha(color as any, 0.15);
+    const getGlowStyle = () => {
+      if (glowDirection === 'none') return {};
+      const spread = 10; // px
+      const blur = 18;   // px
+      const spread2 = 5; // px
+      const blur2 = 10;  // px
+      if (glowDirection === 'right') {
+        return {
+          boxShadow: `${spread}px 0 ${blur}px ${soft}, ${spread2}px 0 ${blur2}px ${faint}`,
+        } as const;
+      }
+      if (glowDirection === 'left') {
+        return {
+          boxShadow: `-${spread}px 0 ${blur}px ${soft}, -${spread2}px 0 ${blur2}px ${faint}`,
+        } as const;
+      }
+      return {};
+    };
+
+    return (
+      <Box
+        component="span"
+        onClick={onClick}
+        sx={{
+          display: 'inline-block',
+          width: '0.6em',
+          height: '0.6em',
+          borderRadius: '50%',
+          bgcolor: color,
+          cursor: onClick ? 'pointer' : 'default',
+          ...getGlowStyle(),
+        }}
+      />
+    );
+  };
 
   return (
     <Box component="section" sx={{ maxWidth: 960, mx: 'auto', mt: 2, px: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
         <Typography variant="h6" sx={{ mr: 0.5 }}>
-          Search results for
+          Search results for matching
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {categories.map((c) => {
@@ -82,8 +152,8 @@ const SearchResults: React.FC<Props> = ({ results }) => {
               <Chip
                 key={c.key}
                 clickable
-                onClick={() => toggle(c.key)}
-                icon={<Dot color={dotColor} />}
+                onClick={(e) => toggle(c.key, e.shiftKey)}
+                icon={<Dot color={dotColor} glowDirection="none" onClick={(e) => { e.stopPropagation(); showOnlyCategory(c.key); }} />}
                 label={c.label}
                 sx={{
                   borderRadius: '7px',
@@ -118,12 +188,82 @@ const SearchResults: React.FC<Props> = ({ results }) => {
           })}
         </Box>
       </Box>
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          textAlign: 'center', 
+          color: 'text.secondary', 
+          fontSize: '0.85rem', 
+          mb: 2,
+          opacity: 0.7
+        }}
+      >
+        Shift-click a chip or click the dot to show only results from that category
+      </Typography>
       <List>
-        {results.map((r) => (
-          <ListItem key={r.id} divider>
-            <ListItemText primary={`${r.name}`} secondary={r.description ?? ''} />
-          </ListItem>
-        ))}
+        {filteredResults.map((r) => {
+          const categoryInfo = getCategoryInfo(r.type);
+          const singularType = getSingularType(r.type);
+          
+          return (
+            <ListItem key={r.id} divider>
+              {/** Row container with bold left-to-right color wash for the category color (dot removed) */}
+              <Box
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  width: '100%',
+                  // Slight padding so text isn't flush with the edge
+                  pl: 0.5,
+                  // Larger, more visible gradient wash from the left
+                  ...(categoryInfo
+                    ? {
+                        '&:before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: 2,
+                          bottom: 2,
+                           width: 240,
+                          pointerEvents: 'none',
+                           background: `linear-gradient(90deg, ${alpha(
+                             categoryInfo.vibrant,
+                             0.55
+                           )} 0, ${alpha(
+                             categoryInfo.vibrant,
+                             0
+                           )} 240px)`,
+                           filter: 'blur(22px)',
+                          zIndex: 0,
+                        },
+                      }
+                    : {}),
+                }}
+              >
+                <ListItemText
+                  primary={r.name}
+                  secondary={r.description ?? ''}
+                  sx={{ flex: 1, position: 'relative', zIndex: 1 }}
+                />
+                {categoryInfo && (
+                  <Typography
+                    sx={{
+                      position: 'relative',
+                      zIndex: 1,
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: categoryInfo.vibrant,
+                    }}
+                  >
+                    {singularType}
+                  </Typography>
+                )}
+              </Box>
+            </ListItem>
+          );
+        })}
       </List>
     </Box>
   );

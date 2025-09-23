@@ -118,33 +118,39 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
               autoCorrect: 'off',
               autoCapitalize: 'none',
               spellCheck: false,
+              style: {
+                fontSize: isMobile ? '1.1rem' : '1.35rem', // larger text
+                lineHeight: 1.5,
+              },
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search sx={{ fontSize: isMobile ? '18px' : '20px' }} />
+                  <Search sx={{ fontSize: isMobile ? 24 : 26 }} />
                 </InputAdornment>
               ),
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                height: isMobile ? '36px' : '40px',
-                borderRadius: isMobile ? '8px' : '12px',
+                height: isMobile ? '44px' : '56px',
+                borderRadius: isMobile ? '12px' : '28px',
                 backgroundColor: 'transparent',
                 color: theme => theme.palette.text.primary,
                 transition: 'box-shadow 120ms ease, border-color 120ms ease',
+                border: 'none',
+                boxShadow: 'none',
                 '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme => theme.palette.action.disabled,
+                  border: 'none !important',
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme => theme.palette.primary.main,
+                  border: 'none !important',
                 },
                 '&.Mui-focused': {
-                  boxShadow: theme => `0 0 0 4px ${theme.palette.primary.main}26`,
+                  boxShadow: 'none',
+                  border: 'none',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: theme => theme.palette.primary.main,
-                  borderWidth: '1px',
+                  border: 'none !important',
                 },
                 '& .MuiSvgIcon-root': {
                   color: theme => theme.palette.text.secondary,
@@ -152,12 +158,13 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
                 '&.Mui-focused .MuiSvgIcon-root': {
                   color: theme => theme.palette.primary.main,
                 },
+                fontSize: isMobile ? '1.1rem' : '1.15rem', // slightly smaller text
               },
-                '& .MuiInputBase-input::placeholder': {
-                  color: theme => theme.palette.text.secondary,
-                  opacity: 1,
-                  fontSize: isMobile ? '12px' : '14px',
-                },
+              '& .MuiInputBase-input::placeholder': {
+                color: theme => theme.palette.text.secondary,
+                opacity: 1,
+                fontSize: isMobile ? '1rem' : '1.08rem', // slightly smaller placeholder
+              },
             }}
           />
         </Box>
@@ -211,7 +218,7 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
               : (mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
             transform: 'translateX(-120%)',
             // If typing, static glow; else animate
-            animation: (active && !typing) ? 'searchWave 600ms linear infinite' : (completing ? 'searchWave 240ms linear 1' : 'none'),
+            animation: (active && !typing) ? 'searchWave 2000ms linear infinite' : (completing ? 'searchWave 400ms linear 1' : 'none'),
             '@keyframes searchWave': {
               '0%': { transform: 'translateX(-120%)' },
               '60%': { transform: 'translateX(30%)' },

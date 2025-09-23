@@ -49,44 +49,45 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           autoCorrect: 'off',
           autoCapitalize: 'none',
           spellCheck: false,
+          style: {
+            fontSize: '1.35rem', // larger text
+            lineHeight: 1.5,
+          },
         }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Search sx={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)' }} />
+              <Search sx={{ color: mode === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.35)', fontSize: 26 }} />
             </InputAdornment>
           ),
           sx: {
-            height: '48px',
-            borderRadius: '24px',
-            backgroundColor: mode === 'dark' ? 'transparent' : 'white',
-            border: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'}`,
+            height: '56px',
+            borderRadius: '28px',
+            backgroundColor: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
             '& fieldset': {
-              border: 'none',
+              border: 'none !important',
             },
             '&:hover': {
-              backgroundColor: mode === 'dark' 
-                ? 'rgba(255, 255, 255, 0.05)' 
-                : 'rgba(0, 0, 0, 0.02)',
-              boxShadow: mode === 'dark'
-                ? '0 1px 6px rgba(255, 255, 255, 0.1)'
-                : '0 1px 6px rgba(0, 0, 0, 0.1)',
+              border: 'none',
+              boxShadow: 'none',
             },
             '&.Mui-focused': {
-              backgroundColor: mode === 'dark' 
-                ? 'rgba(255, 255, 255, 0.05)' 
-                : 'white',
-              boxShadow: mode === 'dark'
-                ? '0 1px 6px rgba(255, 255, 255, 0.2)'
-                : '0 1px 6px rgba(0, 0, 0, 0.2)',
+              backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+              boxShadow: mode === 'dark' ? '0 4px 18px rgba(255,255,255,0.04)' : '0 6px 20px rgba(0,0,0,0.06)',
+              border: 'none',
             },
-            color: mode === 'dark' ? 'white' : 'black',
+            color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
+            fontSize: '1.15rem', // slightly smaller text
+            transition: 'background-color 160ms ease, box-shadow 180ms ease, border-color 120ms ease',
           },
         }}
         sx={{
           '& .MuiInputBase-input::placeholder': {
-            color: mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+            color: mode === 'dark' ? 'rgba(255, 255, 255, 0.36)' : 'rgba(0, 0, 0, 0.36)',
             opacity: 1,
+            fontSize: '1.08rem', // slightly smaller placeholder
           },
         }}
       />
