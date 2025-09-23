@@ -224,11 +224,19 @@ const SearchResults: React.FC<Props> = ({ results }) => {
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: 56,
-                    background: glowColor,
-                    opacity: isDark ? 0.25 : 0.18,
-                    filter: 'blur(18px)',
+                    // Expand across the whole row so the glow can fade left->right
+                    right: 0,
+                    width: '150%',
+                    // Use a left-to-right gradient from vibrant color to transparent
+                    background: `linear-gradient(90deg, ${glowColor} 0%, rgba(0,0,0,0) 60%)`,
+                    // Make the glow brighter and softer
+                    opacity: isDark ? 0.45 : 0.37,
+                    filter: 'blur(28px)',
+                    transform: 'translateZ(0)',
                     pointerEvents: 'none',
+                    transition: 'opacity 180ms ease, transform 180ms ease',
+                    // ensure the gradient blends nicely over background
+                    mixBlendMode: isDark ? 'screen' : 'normal',
                   }}
                 />
               )}
