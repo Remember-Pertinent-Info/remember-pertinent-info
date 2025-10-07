@@ -66,26 +66,26 @@ CANDIDATE_EMPTY_DIRS: Tuple[Path, ...] = (
 IGNORE_TOP_LEVEL_DIRS = {".next", "node_modules", ".git"}
 SOURCE_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx"}
 
-
+#requires source path, destination path, and boolean dry run.
 def move_path(src: Path, dst: Path, dry_run: bool) -> None:
-    abs_src = ROOT / src
-    abs_dst = ROOT / dst
+    abs_src = ROOT / src #defining absolute path for source
+    abs_dst = ROOT / dst #defining absolute path for destination
 
-    if not abs_src.exists():
+    if not abs_src.exists(): #warning for no existing source
         print(f"[warn] skipping missing path: {src}")
         return
 
-    if abs_dst.exists():
+    if abs_dst.exists(): #warning for no existing destination
         print(f"[warn] destination already exists, skipping move: {dst}")
         return
 
-    if dry_run:
+    if dry_run: #print statement on dry run only
         print(f"[dry-run] move {src} -> {dst}")
         return
 
-    abs_dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(abs_src), str(abs_dst))
-    print(f"[move] {src} -> {dst}")
+    abs_dst.parent.mkdir(parents=True, exist_ok=True) #making directory in destination
+    shutil.move(str(abs_src), str(abs_dst)) #moving contents
+    print(f"[move] {src} -> {dst}") 
 
 
 def process_moves(file_moves: Iterable[Tuple[Path, Path]],
