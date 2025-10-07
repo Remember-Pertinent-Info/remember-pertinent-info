@@ -23,15 +23,88 @@ The project uses **Next.js 15 App Router** for both page routing and API routing
 
 ### How It Works
 
-Next.js App Router uses the filesystem to define routes:
+Next.js App Router uses the filesystem to define routes with special files:
 
 ```
 app/
-├── page.tsx           → / (root)
 ├── layout.tsx         → Root layout (wraps all pages)
+├── page.tsx           → / (root)
+├── loading.tsx        → Global loading UI
+├── error.tsx          → Global error boundary
+├── global-error.tsx   → Root layout error handler
+├── not-found.tsx      → Custom 404 page
 ├── globals.css        → Global styles
 └── admin/
-    └── page.tsx       → /admin
+    ├── page.tsx       → /admin
+    └── loading.tsx    → Admin loading state
+```
+
+### Special Route Files
+
+Next.js 15 provides special file names for enhanced functionality:
+
+#### `loading.tsx`
+Automatically wraps the page in a React Suspense boundary and displays while content loads.
+
+```typescript
+// app/loading.tsx
+import { CircularProgress } from '@mui/material';
+
+export default function Loading() {
+  return <CircularProgress />;
+}
+```
+
+#### `error.tsx`
+Catches errors in the route segment and displays a fallback UI. Must be a Client Component.
+
+```typescript
+// app/error.tsx
+'use client';
+
+export default function Error({ error, reset }: {
+  error: Error;
+  reset: () => void;
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={reset}>Try again</button>
+    </div>
+  );
+}
+```
+
+#### `not-found.tsx`
+Displayed when a route doesn't exist or when `notFound()` is called.
+
+```typescript
+// app/not-found.tsx
+export default function NotFound() {
+  return <h2>Page Not Found</h2>;
+}
+```
+
+#### `global-error.tsx`
+Catches errors in the root layout. Must include its own `<html>` and `<body>` tags.
+
+```typescript
+// app/global-error.tsx
+'use client';
+
+export default function GlobalError({ error, reset }: {
+  error: Error;
+  reset: () => void;
+}) {
+  return (
+    <html>
+      <body>
+        <h2>Critical Error</h2>
+        <button onClick={reset}>Try again</button>
+      </body>
+    </html>
+  );
+}
 ```
 
 ### Adding a New Page
