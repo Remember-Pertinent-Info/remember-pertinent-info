@@ -33,9 +33,14 @@ The project follows a **flat, root-level architecture** for maximum simplicity a
 ├── app/                    # Next.js App Router (pages & API routes)
 │   ├── layout.tsx          # Root layout with providers
 │   ├── page.tsx            # Home page (/)
+│   ├── loading.tsx         # Global loading UI
+│   ├── error.tsx           # Global error boundary
+│   ├── global-error.tsx    # Root layout error handler
+│   ├── not-found.tsx       # Global 404 page
 │   ├── globals.css         # Global styles
 │   ├── admin/              # Admin page route
-│   │   └── page.tsx        # Admin management UI (/admin)
+│   │   ├── page.tsx        # Admin management UI (/admin)
+│   │   └── loading.tsx     # Admin loading state
 │   └── api/                # API route handlers
 │       ├── search/         # Search endpoint
 │       └── admin/          # Admin endpoints (entities, details, links)
@@ -99,10 +104,27 @@ The project follows a **flat, root-level architecture** for maximum simplicity a
 
 ### Page Routes (App Router)
 
-Next.js 15 App Router uses file-system based routing:
+Next.js 15 App Router uses file-system based routing with special files for enhanced UX:
 
 - **`/`** → `app/page.tsx` - Landing page with search
 - **`/admin`** → `app/admin/page.tsx` - Admin management interface
+
+### Special Route Files
+
+The app follows Next.js 15 conventions for special route files:
+
+- **`app/layout.tsx`** - Root layout wrapping all pages
+- **`app/loading.tsx`** - Global loading state (React Suspense boundary)
+- **`app/error.tsx`** - Global error boundary for error handling
+- **`app/global-error.tsx`** - Error boundary for root layout errors
+- **`app/not-found.tsx`** - Custom 404 page
+- **`app/admin/loading.tsx`** - Admin-specific loading state
+
+These files provide:
+- Consistent loading experiences across routes
+- Graceful error handling with user-friendly messages
+- Branded 404 pages with navigation back to home
+- Error recovery with retry functionality
 
 ### API Routes
 

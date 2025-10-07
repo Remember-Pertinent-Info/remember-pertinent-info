@@ -16,7 +16,7 @@ Our vision is to produce a web app that will help facilitate the learning of var
 
 ## Project Structure:
 
-The codebase uses a **flat, root-level architecture** for simplicity:
+The codebase uses a **flat, root-level architecture** for simplicity and follows **Next.js 15 App Router conventions**:
 
 ```
 /
@@ -41,6 +41,8 @@ The codebase uses a **flat, root-level architecture** for simplicity:
 - ✅ RESTful API endpoints
 - ✅ Light/dark theme support
 - ✅ Type-safe database queries with Prisma
+- ✅ Error boundaries and loading states (Next.js 15 special files)
+- ✅ Custom 404 page with navigation
 
 ## Quick Start:
 
@@ -60,7 +62,9 @@ Visit http://localhost:3000 to see the app.
 
 ## Documentation:
 
+- **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Next.js 15 project structure and conventions
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Detailed architecture and design decisions
+- **[ROUTING.md](./ROUTING.md)** - Routing patterns and API endpoints
 - **[ONBOARDING.md](./ONBOARDING.md)** - Developer onboarding guide
 - **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - Migration guide for structure changes
 
