@@ -8,11 +8,61 @@ Our vision is to produce a web app that will help facilitate the learning of var
 
 ## Stack:
 
-* HTML  
-* CSS/Tailwind  
-* React/TS  
-* MongoDB?  
-* PostgreSQL
+* **Frontend:** Next.js 15 (App Router), React 19, TypeScript 5
+* **UI Library:** Material-UI v7 (MUI) + Emotion + Tailwind CSS 4
+* **Backend:** Next.js API Routes (Node.js)
+* **Database:** PostgreSQL with Prisma ORM
+* **Build Tools:** Turbopack (Next.js), ESLint, TypeScript Compiler
+
+## Project Structure:
+
+The codebase uses a **flat, root-level architecture** for simplicity:
+
+```
+/
+├── app/                # Next.js App Router (pages & API routes)
+│   ├── page.tsx        # Home page (/)
+│   ├── admin/          # Admin interface (/admin)
+│   └── api/            # API endpoints
+├── components/         # React UI components
+├── providers/          # React Context providers (Theme, Modals)
+├── utils/              # Utility functions (Prisma client, etc.)
+├── theme/              # MUI theme configuration
+├── generated/          # Auto-generated Prisma client
+├── prisma/             # Database schema & migrations
+└── scripts/            # Utility scripts
+```
+
+**Key Features:**
+- ✅ Multi-page navigation with Next.js App Router
+- ✅ Search functionality across all entities
+- ✅ Modal-based entity details with navigation
+- ✅ Admin interface for entity management
+- ✅ RESTful API endpoints
+- ✅ Light/dark theme support
+- ✅ Type-safe database queries with Prisma
+
+## Quick Start:
+
+```bash
+# Install dependencies
+yarn install
+
+# Set up database (see .env.example for DATABASE_URL)
+yarn prisma:generate
+yarn prisma:migrate
+
+# Start development server
+yarn dev
+```
+
+Visit http://localhost:3000 to see the app.
+
+## Documentation:
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Detailed architecture and design decisions
+- **[ONBOARDING.md](./ONBOARDING.md)** - Developer onboarding guide
+- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - Migration guide for structure changes
 
 ## Semester Specific Goals:
 
