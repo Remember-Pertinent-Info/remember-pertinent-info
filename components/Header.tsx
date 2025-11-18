@@ -28,6 +28,15 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
   const typingRef = useRef<NodeJS.Timeout | null>(null);
   const [typing, setTyping] = useState<boolean>(false);
 
+  // Stack Quack easter egg
+  const playQuack = (): void => {
+    const audio = new Audio('/quackStack.mp3');
+    audio.onerror = () => {
+      console.warn('Audio file quackStack.mp3 not found - easter egg disabled');
+    };
+    audio.play().catch(() => console.log('Audio play failed'));
+  };
+
   useEffect(() => {
     if (searching) {
       // start/keep the animated bar running
@@ -60,7 +69,13 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
   return (
     <AppBar position="fixed" color="transparent" sx={{ boxShadow: 'none', height: isMobile ? 'auto' : '64px', backdropFilter: 'blur(10px)', borderBottom: theme => `1px solid ${theme.palette.divider}` }}>
       {isMobile && (
-        <Toolbar sx={{ justifyContent: 'center', minHeight: '48px' }}>
+        <Toolbar sx={{ justifyContent: 'center', minHeight: '48px', gap: 1 }}>
+          <img
+            src="/images/logo.png"
+            alt="Studious Duck"
+            style={{ height: '36px', cursor: 'pointer' }}
+            onClick={playQuack}
+          />
           <Typography
             variant="subtitle1"
             component="div"
@@ -71,14 +86,22 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
         </Toolbar>
       )}
       <Toolbar sx={{ height: '100%', gap: isMobile ? 1 : 2, alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Left side - Title (Desktop) */}
-        <Typography
-          variant={isMobile ? "subtitle1" : "h6"}
-          component="div"
-          sx={{ fontWeight: 'bold', color: theme => theme.palette.text.primary, textTransform: 'capitalize', whiteSpace: 'nowrap', display: isMobile ? 'none' : 'block' }}
-        >
-          CourseSource
-        </Typography>
+        {/* Left side - Logo and Title (Desktop) */}
+        <Box sx={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 1.5 }}>
+          <img
+            src="/images/logo.png"
+            alt="Studious Duck"
+            style={{ height: '50px', cursor: 'pointer' }}
+            onClick={playQuack}
+          />
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ fontWeight: 'bold', color: theme => theme.palette.text.primary, textTransform: 'capitalize', whiteSpace: 'nowrap' }}
+          >
+            CourseSource
+          </Typography>
+        </Box>
 
         {/* Center - Search Bar */}
         <Box
