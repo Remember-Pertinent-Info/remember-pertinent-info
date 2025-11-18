@@ -6,6 +6,7 @@ import '@fontsource/roboto/700.css';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import EmotionRegistry from '@/components/EmotionRegistry';
 import { ModalStackProvider } from '@/providers/ModalStackProvider';
+import { SemesterProvider } from '@/providers/SemesterProvider';
 
 /**
  * App metadata
@@ -49,9 +50,11 @@ export default function RootLayout({
         {/* Emotion SSR registry + MUI theme provider wraps the entire app */}
         <EmotionRegistry>
           <ThemeProvider>
-            <ModalStackProvider>
-              {children}
-            </ModalStackProvider>
+            <SemesterProvider>
+              <ModalStackProvider>
+                {children}
+              </ModalStackProvider>
+            </SemesterProvider>
           </ThemeProvider>
         </EmotionRegistry>
       </body>

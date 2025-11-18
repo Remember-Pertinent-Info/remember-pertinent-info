@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, useMediaQuery, useTheme, Typography, Toolbar } from '@mui/material';
 import Header from '@/components/Header';
 import SearchResults, { SearchResult } from '@/components/SearchResults';
+import { useSemester } from '@/providers/SemesterProvider';
 
 /**
  * Main landing page component
@@ -12,17 +13,27 @@ import SearchResults, { SearchResult } from '@/components/SearchResults';
 const LandingPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { currentSemester } = useSemester();
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [lastQuery, setLastQuery] = useState<string>('');
 
-  // Fetch default results on first mount
+  // Fetch default results on first mount and when semester changes
+  // If user had a search query, re-run it with the new semester
   useEffect(() => {
+    if (!currentSemester) return; // Wait for semester to load
+
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/search');
+        const params = new URLSearchParams();
+        if (lastQuery) params.set('q', lastQuery);
+        params.set('semester', currentSemester);
+
+        const url = `/api/search?${params.toString()}`;
+        const res = await fetch(url);
         if (!res.ok) return;
         const json = await res.json();
         if (!cancelled) {
@@ -34,13 +45,18 @@ const LandingPage: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [currentSemester]); // Reload when semester changes
 
   const handleSearch = async (query: string) => {
     const value = (query ?? '').trim();
+    setLastQuery(value);
     setSearching(true);
     try {
-      const url = value ? `/api/search?q=${encodeURIComponent(value)}` : '/api/search';
+      const params = new URLSearchParams();
+      if (value) params.set('q', value);
+      if (currentSemester) params.set('semester', currentSemester);
+
+      const url = `/api/search?${params.toString()}`;
       const res = await fetch(url);
       if (!res.ok) {
         console.error('Search API error', await res.text());
@@ -67,7 +83,7 @@ const LandingPage: React.FC = () => {
   return (
     <>
       {/* Header with navigation and search */}
-  <Header onSearch={handleSearch} searching={searching} />
+      <Header onSearch={handleSearch} searching={searching} />
       
       {/* Main content area */}
       <Box sx={{ minHeight: '100vh' }}>

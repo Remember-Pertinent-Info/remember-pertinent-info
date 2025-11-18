@@ -1,189 +1,148 @@
+
 import { NextResponse } from 'next/server';
-import prisma from '@/utils/prisma';
+
+// A simple in-memory cache to store QUACS data to avoid re-fetching on every search.
+// Cache is per-semester to handle semester switching
+const cache = new Map<string, {
+  data: any | null;
+  timestamp: number;
+}>();
+const TTL = 1000 * 60 * 60; // 1 hour
+
+async function getQuacsData(semester?: string) {
+    const now = Date.now();
+
+    // If no semester specified, get the latest one
+    let targetSemester = semester;
+    if (!targetSemester) {
+        const semesterResponse = await fetch('https://api.github.com/repos/quacs/quacs-data/contents/semester_data');
+        if (!semesterResponse.ok) throw new Error('Failed to fetch semester list from GitHub API');
+        const semesters = await semesterResponse.json();
+        targetSemester = semesters
+            .filter((item: any) => item.type === 'dir' && /^\d{6}$/.test(item.name))
+            .sort((a: any, b: any) => b.name.localeCompare(a.name))[0]?.name;
+
+        if (!targetSemester) throw new Error('No valid semesters found in QUACS data');
+    }
+
+    // Check cache for this semester
+    const cached = cache.get(targetSemester);
+    if (cached && (now - cached.timestamp < TTL)) {
+        return cached.data;
+    }
+
+    try {
+
+        const [coursesRes, catalogRes] = await Promise.all([
+            fetch(`https://raw.githubusercontent.com/quacs/quacs-data/master/semester_data/${targetSemester}/courses.json`),
+            fetch(`https://raw.githubusercontent.com/quacs/quacs-data/master/semester_data/${targetSemester}/catalog.json`),
+        ]);
+
+        if (!coursesRes.ok || !catalogRes.ok) {
+            throw new Error('Failed to fetch one or more QUACS data files.');
+        }
+
+        const coursesArray = await coursesRes.json();
+        const catalog = await catalogRes.json();
+
+        // QUACS courses.json is an array of departments, each with a courses array
+        // We need to flatten it first (like PR #7 processCourses function)
+        const allCoursesList: any[] = [];
+        coursesArray.forEach((dept: any) => {
+            if (dept.courses && Array.isArray(dept.courses)) {
+                dept.courses.forEach((course: any) => {
+                    const catalogInfo = catalog[course.id];
+                    const name = catalogInfo?.name || course.title || course.id;
+
+                    // Only include courses with valid names (filter out blank/empty courses)
+                    if (name && name.trim()) {
+                        allCoursesList.push({
+                            id: course.id,
+                            code: course.id,
+                            name: name,
+                            description: catalogInfo?.description || null,
+                            type: 'courses'
+                        });
+                    }
+                });
+            }
+        });
+
+        const combinedData = allCoursesList;
+
+        cache.set(targetSemester, {
+            data: combinedData,
+            timestamp: now
+        });
+
+        return combinedData;
+
+    } catch (error) {
+        console.error("Failed to fetch QUACS data:", error);
+        // If fetching fails, return stale cache data if available, otherwise throw
+        const cached = cache.get(targetSemester);
+        if (cached) {
+            return cached.data;
+        }
+        throw error;
+    }
+}
+
 
 /**
- * GET /api/search?q=term
+ * GET /api/search?q=term&semester=202501
  * Searches all entity tables for substring matches on code, name, or description
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const q = url.searchParams.get('q') || '';
-
-  if (!q.trim()) {
-    // Return a default list when no query provided (e.g., initial page load)
-    try {
-      const [concepts, skills, courses, tracks, departments, majors] = await Promise.all([
-        prisma.concept.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-        prisma.skill.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-        prisma.course.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-        prisma.track.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-        prisma.department.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-        prisma.major.findMany({
-          select: { id: true, code: true, name: true, description: true },
-          orderBy: { name: 'asc' },
-          take: 20,
-        }),
-      ]);
-
-      const all = [
-        ...concepts.map(c => ({ ...c, type: 'concepts' })),
-        ...skills.map(s => ({ ...s, type: 'skills' })),
-        ...courses.map(c => ({ ...c, type: 'courses' })),
-        ...tracks.map(t => ({ ...t, type: 'tracks' })),
-        ...departments.map(d => ({ ...d, type: 'departments' })),
-        ...majors.map(m => ({ ...m, type: 'majors' })),
-      ].sort((a, b) => a.name.localeCompare(b.name));
-
-      return NextResponse.json({ results: all, message: 'Showing all items' });
-    } catch (e) {
-      console.error('Default list fetch failed', e);
-      return NextResponse.json({ results: [] });
-    }
-  }
-
-  const term = q.trim();
+  const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+  const semester = url.searchParams.get('semester') || undefined;
 
   try {
-    // Use substring matching with Prisma's contains filter
-    // This is case-insensitive by default and matches anywhere in the string
-    const [concepts, skills, courses, tracks, departments, majors] = await Promise.all([
-      prisma.concept.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-      prisma.skill.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-      prisma.course.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-      prisma.track.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-      prisma.department.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-      prisma.major.findMany({
-        where: {
-          OR: [
-            { code: { contains: term, mode: 'insensitive' } },
-            { name: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true, code: true, name: true, description: true },
-        take: 100,
-      }),
-    ]);
+    const allCourses = await getQuacsData(semester);
 
-    // Combine all results with their type
-    const allResults = [
-      ...concepts.map(c => ({ ...c, type: 'concepts' })),
-      ...skills.map(s => ({ ...s, type: 'skills' })),
-      ...courses.map(c => ({ ...c, type: 'courses' })),
-      ...tracks.map(t => ({ ...t, type: 'tracks' })),
-      ...departments.map(d => ({ ...d, type: 'departments' })),
-      ...majors.map(m => ({ ...m, type: 'majors' })),
-    ];
+    if (!q) {
+      // Return a default list of the first 200 courses if no query
+      return NextResponse.json({
+          results: allCourses.slice(0, 200),
+          message: 'Showing a list of available courses.'
+      });
+    }
 
-    // Sort results to prioritize matches at the beginning of words
-    const sortedResults = allResults.sort((a, b) => {
-      const aName = a.name.toLowerCase();
-      const bName = b.name.toLowerCase();
-      const aCode = a.code.toLowerCase();
-      const bCode = b.code.toLowerCase();
-      const searchTerm = term.toLowerCase();
-      
-      // Prioritize exact matches
-      if (aName === searchTerm || aCode === searchTerm) return -1;
-      if (bName === searchTerm || bCode === searchTerm) return 1;
-      
-      // Then prioritize starts with
-      const aStartsName = aName.startsWith(searchTerm);
-      const bStartsName = bName.startsWith(searchTerm);
-      const aStartsCode = aCode.startsWith(searchTerm);
-      const bStartsCode = bCode.startsWith(searchTerm);
-      
-      if ((aStartsName || aStartsCode) && !(bStartsName || bStartsCode)) return -1;
-      if (!(aStartsName || aStartsCode) && (bStartsName || bStartsCode)) return 1;
-      
-      // Then prioritize word boundary matches
-      const aWordBoundary = aName.includes(' ' + searchTerm) || aName.includes('-' + searchTerm);
-      const bWordBoundary = bName.includes(' ' + searchTerm) || bName.includes('-' + searchTerm);
-      
-      if (aWordBoundary && !bWordBoundary) return -1;
-      if (!aWordBoundary && bWordBoundary) return 1;
-      
-      // Finally, alphabetical order
-      return aName.localeCompare(bName);
+    // Three-bucket search logic from index.html
+    // Prioritize: ID matches → Name matches → Description matches
+    const idMatches: any[] = [];
+    const nameMatches: any[] = [];
+    const descMatches: any[] = [];
+
+    allCourses.forEach((course: any) => {
+      const courseId = (course.code || '').toLowerCase();
+      const courseName = (course.name || '').toLowerCase();
+      const courseDesc = (course.description || '').toLowerCase();
+
+      // Bucket 1: Exact or starts-with match on course ID
+      if (courseId === q || courseId.startsWith(q)) {
+        idMatches.push(course);
+      }
+      // Bucket 2: Match in course name
+      else if (courseName.includes(q)) {
+        nameMatches.push(course);
+      }
+      // Bucket 3: Match in description
+      else if (courseDesc.includes(q)) {
+        descMatches.push(course);
+      }
     });
 
-    // Limit to 200 results for performance
+    // Combine buckets in priority order
+    const sortedResults = [...idMatches, ...nameMatches, ...descMatches];
     const limitedResults = sortedResults.slice(0, 200);
 
     return NextResponse.json({ 
       results: limitedResults,
-      message: limitedResults.length === 0 ? `No results found for "${term}"` : undefined
+      message: limitedResults.length === 0 ? `No results found for "${q}"` : undefined
     });
+
   } catch (err) {
     console.error('Search failed', err);
     return new NextResponse('Internal Server Error', { status: 500 });

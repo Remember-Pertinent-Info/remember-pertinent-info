@@ -212,8 +212,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
             overflowX: 'hidden',
           }}
         >
-          {/* Description */}
-          {entity.description && (
+          {/* Description - skip for courses since CourseDetail handles it */}
+          {entity.description && entity.type !== 'courses' && (
             <Typography
               variant="body1"
               sx={{

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Box, TextField, InputAdornment, useMediaQuery, useTheme } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Box, TextField, InputAdornment, useMediaQuery, useTheme, Select, MenuItem, FormControl } from '@mui/material';
 import { GitHub, LightMode, DarkMode, Search } from '@mui/icons-material';
 import { useAppTheme as useCustomTheme } from '@/providers/ThemeProvider';
+import { useSemester } from '@/providers/SemesterProvider';
 
 /**
  * Header component with navigation and theme controls
@@ -15,6 +16,7 @@ interface Props {
 
 const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
   const { mode, toggleColorMode } = useCustomTheme();
+  const { currentSemester, setSemester, availableSemesters } = useSemester();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const [searchQuery, setSearchQuery] = useState('');
@@ -159,6 +161,35 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
 
         {/* Right side - Actions */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 0.5 : 1, flexShrink: 0 }}>
+          {/* Semester Selector */}
+          {!isMobile && currentSemester && (
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <Select
+                value={currentSemester}
+                onChange={(e) => setSemester(e.target.value)}
+                sx={{
+                  fontSize: '0.875rem',
+                  color: theme => theme.palette.text.primary,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme => theme.palette.divider,
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme => theme.palette.primary.main,
+                  },
+                  '& .MuiSelect-icon': {
+                    color: theme => theme.palette.text.secondary,
+                  },
+                }}
+              >
+                {availableSemesters.map((sem) => (
+                  <MenuItem key={sem.code} value={sem.code}>
+                    {sem.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
           {/* Theme Switcher */}
           <IconButton onClick={toggleColorMode} sx={{ color: theme => theme.palette.text.primary }} aria-label="toggle theme">
             {mode === 'dark' ? <LightMode fontSize={isMobile ? 'small' : 'medium'} /> : <DarkMode fontSize={isMobile ? 'small' : 'medium'} />}
