@@ -29,8 +29,15 @@ interface Catalog {
     };
 }
 
+interface PrereqObject {
+    and?: PrereqObject[];
+    or?: PrereqObject[];
+    course?: string;
+    min_grade?: string;
+}
+
 interface PrereqData {
-    [key: string]: any;
+    [key: string]: PrereqObject;
 }
 
 interface ProcessedCourses {
@@ -44,11 +51,21 @@ interface QuacsVisualizerProps {
   onClose: () => void;
 }
 
+interface RawCourse {
+    id: string;
+    title?: string;
+    [key: string]: unknown;
+}
+
 // Helper functions (adapted from index.html)
-function processCourses(courses: any[]): ProcessedCourses {
+function processCourses(courses: RawCourse[]): ProcessedCourses {
     const courseMap: ProcessedCourses = {};
     courses.forEach(course => {
-        courseMap[course.id] = { ...course, prerequisites: [] };
+        courseMap[course.id] = {
+            id: course.id,
+            title: course.title || course.id,
+            prerequisites: []
+        };
     });
     return courseMap;
 }
@@ -83,7 +100,7 @@ function buildPrerequisiteTree(
 }
 
 function parsePrerequisites(
-    prereqObject: any,
+    prereqObject: PrereqObject,
     courses: ProcessedCourses,
     catalog: Catalog,
     prereqs: PrereqData,
@@ -92,13 +109,13 @@ function parsePrerequisites(
     const results: Prerequisite[] = [];
 
     if (prereqObject.and) {
-        prereqObject.and.forEach((p: any) => {
+        prereqObject.and.forEach((p) => {
             results.push(...parsePrerequisites(p, courses, catalog, prereqs, path));
         });
     }
 
     if (prereqObject.or) {
-        const alternatives = prereqObject.or.flatMap((p: any) =>
+        const alternatives = prereqObject.or.flatMap((p) =>
             parsePrerequisites(p, courses, catalog, prereqs, path)
         );
         alternatives.forEach(alt => {
@@ -136,12 +153,16 @@ export default function QuacsVisualizer({ courseId, open, onClose }: QuacsVisual
     setTreeData(null);
 
     try {
+      interface GitHubItem {
+        type: string;
+        name: string;
+      }
       const semesterResponse = await fetch('https://api.github.com/repos/quacs/quacs-data/contents/semester_data');
       if (!semesterResponse.ok) throw new Error('Failed to fetch semester list from GitHub API');
-      const semesters = await semesterResponse.json();
+      const semesters = await semesterResponse.json() as GitHubItem[];
       const latestSemester = semesters
-        .filter((item: any) => item.type === 'dir' && /^\d{6}$/.test(item.name))
-        .sort((a: any, b: any) => b.name.localeCompare(a.name))[0]?.name;
+        .filter((item) => item.type === 'dir' && /^\d{6}$/.test(item.name))
+        .sort((a, b) => b.name.localeCompare(a.name))[0]?.name;
 
       if (!latestSemester) throw new Error('No valid semesters found in QUACS data');
 
@@ -164,18 +185,18 @@ export default function QuacsVisualizer({ courseId, open, onClose }: QuacsVisual
       const tree = buildPrerequisiteTree(courseId, processedCourses, catalog, prereqs);
       setTreeData(tree);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading QUACS data:", err);
-      setError(err.message || 'An unknown error occurred.');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   // Renders the prerequisite tree using a recursive component
-  const PrereqTreeNode: React.FC<{ node: Prerequisite; level: number; seenCourses?: Set<string>, parentPath?: string[] }> = ({ node, level, seenCourses = new Set(), parentPath = [] }) => {
+  const PrereqTreeNode: React.FC<{ node: Prerequisite; level: number; seenCourses?: Set<string> }> = ({ node, level, seenCourses = new Set() }) => {
     const [isExpanded, setIsExpanded] = useState(true);
-    const uniqueId = `${node.id.replace(/[^a-zA-Z0-9]/g, '-')}-${level}`;
 
     const isDuplicate = seenCourses.has(node.id);
     const newSeenCourses = new Set(seenCourses);

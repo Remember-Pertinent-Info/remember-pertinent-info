@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { Box, Typography, Chip, useTheme, useMediaQuery, IconButton } from '@mui/material';
 import { Close, Keyboard } from '@mui/icons-material';
 import { SearchResult } from '@/components/SearchResults';
-import { useModalStack } from '@/providers/ModalStackProvider';
 import ConceptDetail from '@/components/ConceptDetail';
 import SkillDetail from '@/components/SkillDetail';
 import CourseDetail from '@/components/CourseDetail';
@@ -43,7 +42,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
   isTopModal = true 
 }) => {
   const theme = useTheme();
-  const { closeTop } = useModalStack();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const modalRef = useRef<HTMLDivElement>(null);
 

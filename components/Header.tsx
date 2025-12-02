@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { AppBar, Toolbar, Typography, IconButton, Box, TextField, InputAdornment, useMediaQuery, useTheme, Select, MenuItem, FormControl } from '@mui/material';
 import { GitHub, LightMode, DarkMode, Search } from '@mui/icons-material';
 import { useAppTheme as useCustomTheme } from '@/providers/ThemeProvider';
@@ -70,10 +71,12 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
     <AppBar position="fixed" color="transparent" sx={{ boxShadow: 'none', height: isMobile ? 'auto' : '64px', backdropFilter: 'blur(10px)', borderBottom: theme => `1px solid ${theme.palette.divider}` }}>
       {isMobile && (
         <Toolbar sx={{ justifyContent: 'center', minHeight: '48px', gap: 1 }}>
-          <img
+          <Image
             src="/images/logo.png"
             alt="Studious Duck"
-            style={{ height: '36px', cursor: 'pointer' }}
+            width={36}
+            height={36}
+            style={{ cursor: 'pointer' }}
             onClick={playQuack}
           />
           <Typography
@@ -88,10 +91,12 @@ const Header: React.FC<Props> = ({ onSearch, searching = false }) => {
       <Toolbar sx={{ height: '100%', gap: isMobile ? 1 : 2, alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Left side - Logo and Title (Desktop) */}
         <Box sx={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 1.5 }}>
-          <img
+          <Image
             src="/images/logo.png"
             alt="Studious Duck"
-            style={{ height: '50px', cursor: 'pointer' }}
+            width={50}
+            height={50}
+            style={{ cursor: 'pointer' }}
             onClick={playQuack}
           />
           <Typography

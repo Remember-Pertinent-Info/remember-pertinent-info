@@ -1,10 +1,18 @@
 
 import { NextResponse } from 'next/server';
 
+interface CourseResult {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  type: string;
+}
+
 // A simple in-memory cache to store QUACS data to avoid re-fetching on every search.
 // Cache is per-semester to handle semester switching
 const cache = new Map<string, {
-  data: any | null;
+  data: CourseResult[] | null;
   timestamp: number;
 }>();
 const TTL = 1000 * 60 * 60; // 1 hour
@@ -15,12 +23,16 @@ async function getQuacsData(semester?: string) {
     // If no semester specified, get the latest one
     let targetSemester = semester;
     if (!targetSemester) {
+        interface GitHubItem {
+            type: string;
+            name: string;
+        }
         const semesterResponse = await fetch('https://api.github.com/repos/quacs/quacs-data/contents/semester_data');
         if (!semesterResponse.ok) throw new Error('Failed to fetch semester list from GitHub API');
-        const semesters = await semesterResponse.json();
+        const semesters = await semesterResponse.json() as GitHubItem[];
         targetSemester = semesters
-            .filter((item: any) => item.type === 'dir' && /^\d{6}$/.test(item.name))
-            .sort((a: any, b: any) => b.name.localeCompare(a.name))[0]?.name;
+            .filter((item) => item.type === 'dir' && /^\d{6}$/.test(item.name))
+            .sort((a, b) => b.name.localeCompare(a.name))[0]?.name;
 
         if (!targetSemester) throw new Error('No valid semesters found in QUACS data');
     }
@@ -45,13 +57,28 @@ async function getQuacsData(semester?: string) {
         const coursesArray = await coursesRes.json();
         const catalog = await catalogRes.json();
 
+        interface QuacsCourse {
+            id: string;
+            title?: string;
+        }
+        interface QuacsDepartment {
+            courses?: QuacsCourse[];
+        }
+        interface CatalogEntry {
+            name?: string;
+            description?: string;
+        }
+        interface CatalogData {
+            [key: string]: CatalogEntry;
+        }
+
         // QUACS courses.json is an array of departments, each with a courses array
         // We need to flatten it first (like PR #7 processCourses function)
-        const allCoursesList: any[] = [];
-        coursesArray.forEach((dept: any) => {
+        const allCoursesList: CourseResult[] = [];
+        (coursesArray as QuacsDepartment[]).forEach((dept) => {
             if (dept.courses && Array.isArray(dept.courses)) {
-                dept.courses.forEach((course: any) => {
-                    const catalogInfo = catalog[course.id];
+                dept.courses.forEach((course) => {
+                    const catalogInfo = (catalog as CatalogData)[course.id];
                     const name = catalogInfo?.name || course.title || course.id;
 
                     // Only include courses with valid names (filter out blank/empty courses)
@@ -101,6 +128,10 @@ export async function GET(request: Request) {
   try {
     const allCourses = await getQuacsData(semester);
 
+    if (!allCourses) {
+      return NextResponse.json({ results: [], message: 'No courses available.' });
+    }
+
     if (!q) {
       // Return a default list of the first 200 courses if no query
       return NextResponse.json({
@@ -111,11 +142,11 @@ export async function GET(request: Request) {
 
     // Three-bucket search logic from index.html
     // Prioritize: ID matches → Name matches → Description matches
-    const idMatches: any[] = [];
-    const nameMatches: any[] = [];
-    const descMatches: any[] = [];
+    const idMatches: CourseResult[] = [];
+    const nameMatches: CourseResult[] = [];
+    const descMatches: CourseResult[] = [];
 
-    allCourses.forEach((course: any) => {
+    allCourses.forEach((course) => {
       const courseId = (course.code || '').toLowerCase();
       const courseName = (course.name || '').toLowerCase();
       const courseDesc = (course.description || '').toLowerCase();

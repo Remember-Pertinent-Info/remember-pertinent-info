@@ -1,16 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-
-// Define the expected structure of the multipart form data
-interface ResourceFormData {
-    title: string;
-    description?: string;
-    resourceType: string;
-    uploaderName?: string;
-    file: File;
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -38,7 +29,7 @@ export async function POST(request: NextRequest) {
         const filePath = path.join(courseUploadDir, filename);
 
         // Ensure the course-specific directory exists
-        await require('fs').promises.mkdir(courseUploadDir, { recursive: true });
+        await mkdir(courseUploadDir, { recursive: true });
 
         // Write the file to the filesystem
         await writeFile(filePath, buffer);
@@ -61,8 +52,9 @@ export async function POST(request: NextRequest) {
             courseId
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error uploading file:', error);
-        return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: "Internal Server Error", details: errorMessage }, { status: 500 });
     }
 }

@@ -45,7 +45,7 @@ const LandingPage: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [currentSemester]); // Reload when semester changes
+  }, [currentSemester, lastQuery]); // Reload when semester or query changes
 
   const handleSearch = async (query: string) => {
     const value = (query ?? '').trim();

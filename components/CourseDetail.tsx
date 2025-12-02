@@ -34,24 +34,47 @@ interface Catalog {
     };
 }
 
+interface Section {
+    crn?: string;
+    [key: string]: unknown;
+}
+
+interface CourseWithSections extends Course {
+    sections?: Section[];
+    dept?: string;
+}
+
 interface PrereqData {
-    [key: string]: any;
+    [key: string]: {
+        prerequisites?: unknown;
+        [key: string]: unknown;
+    };
 }
 
 interface ProcessedCourses {
-    [key: string]: Course;
+    [key: string]: CourseWithSections;
+}
+
+interface QuacsDept {
+    code?: string;
+    courses?: unknown[];
+    [key: string]: unknown;
 }
 
 // Helper functions from QuacsVisualizer
 // QUACS courses.json is an array of departments, each with a courses array
-function processCourses(coursesArray: any[]): ProcessedCourses {
+function processCourses(coursesArray: QuacsDept[]): ProcessedCourses {
     const courseMap: ProcessedCourses = {};
     coursesArray.forEach(dept => {
         if (dept.courses && Array.isArray(dept.courses)) {
-            dept.courses.forEach((course: any) => {
-                courseMap[course.id] = {
-                    ...course,
+            dept.courses.forEach((course: unknown) => {
+                const typedCourse = course as { id: string; [key: string]: unknown };
+                const courseId = typedCourse.id;
+                courseMap[courseId] = {
+                    id: courseId,
+                    title: (typedCourse.title as string) || courseId,
                     prerequisites: [],
+                    sections: typedCourse.sections as Section[] | undefined,
                     dept: dept.code
                 };
             });
@@ -102,8 +125,16 @@ function buildPrerequisiteTree(
     return node;
 }
 
+interface PrereqDataItem {
+    type?: string;
+    course?: string;
+    min_grade?: string;
+    nested?: unknown[];
+    [key: string]: unknown;
+}
+
 function parsePrerequisites(
-    prereqData: any,
+    prereqData: unknown,
     courses: ProcessedCourses,
     catalog: Catalog,
     prereqsByCRN: PrereqData,
@@ -112,27 +143,28 @@ function parsePrerequisites(
 ): Prerequisite[] {
     if (!prereqData || typeof prereqData !== 'object') return [];
 
+    const typedPrereqData = prereqData as PrereqDataItem;
     const prereqs: Prerequisite[] = [];
 
     // Handle direct course prerequisite (e.g., "MATH 1010")
-    if (prereqData.type === 'course' && prereqData.course) {
-        const parts = prereqData.course.split(' ');
+    if (typedPrereqData.type === 'course' && typedPrereqData.course) {
+        const parts = typedPrereqData.course.split(' ');
         if (parts.length >= 2) {
             const courseId = `${parts[0]}-${parts[1]}`;
             const subtree = buildPrerequisiteTree(courseId, courses, catalog, prereqsByCRN, depth, new Set(visited));
             if (subtree) {
                 prereqs.push({
                     ...subtree,
-                    minGrade: prereqData.min_grade || 'D',
+                    minGrade: typedPrereqData.min_grade || 'D',
                 });
             }
         }
     }
 
     // Handle nested prerequisites (AND/OR groups)
-    if (prereqData.nested && Array.isArray(prereqData.nested)) {
-        const isOr = prereqData.type === 'or';
-        prereqData.nested.forEach((item: any) => {
+    if (typedPrereqData.nested && Array.isArray(typedPrereqData.nested)) {
+        const isOr = typedPrereqData.type === 'or';
+        typedPrereqData.nested.forEach((item) => {
             const subPrereqs = parsePrerequisites(item, courses, catalog, prereqsByCRN, depth, visited);
             subPrereqs.forEach(p => {
                 p.isAlternative = isOr;
@@ -194,9 +226,10 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ course }) => {
       const tree = buildPrerequisiteTree(courseId, processedCourses, catalog, prereqsByCRN);
       setTreeData(tree);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading QUACS data:", err);
-      setError(err.message || 'An unknown error occurred.');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
